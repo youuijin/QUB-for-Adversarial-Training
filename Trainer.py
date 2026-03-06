@@ -123,6 +123,10 @@ class Trainer:
         for inputs, targets in self.train_loader:
             inputs, targets = inputs.to(self.device), targets.to(self.device)
 
+            if self.train_attack is None:
+                outputs = self.model(inputs)
+                loss =F.cross_entropy(outputs, targets)
+
             if self.loss == 'CE':
                 adv_inputs = self.train_attack.perturb(inputs, targets)
                 adv_outputs = self.model(adv_inputs)
@@ -159,8 +163,6 @@ class Trainer:
             
             self.scheduler.step()
 
-            break
-
         train_acc = 100.*correct/total
         train_loss = loss_tot/total
         return train_acc, train_loss
@@ -188,9 +190,7 @@ class Trainer:
                 adv_loss_tot += F.cross_entropy(adv_outputs, targets, reduction='sum').item()
 
                 total += targets.size(0)
-
-                break
-            
+                
         valid_acc = 100.*correct/total
         valid_adv_acc = 100.*adv_correct/total
         valid_loss = loss_tot/total
